@@ -1,0 +1,91 @@
+function ni_posts_pages_row_func( $atts ) {
+
+	$a = shortcode_atts( array(
+		'' => '',
+		), $atts );
+$paged = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1;
+
+	$queryArgs = array (
+
+							'post_type'      => 'posts_type',
+
+							'post_status'    => 'publish',
+
+							'posts_per_page' => 4,
+											
+							'paged' => $paged
+						
+
+						);
+	
+	$query = new WP_Query( $queryArgs );
+	//var_dump($query);
+	ob_start();
+	if ( $query->have_posts() ) :
+$i=0;
+
+		while ( $query->have_posts() ) :
+			$query->the_post(); 
+
+?>
+	/** create your code here **/	
+
+<?php
+endwhile; endif;
+
+if (function_exists("custom_pagination")){
+  custom_pagination($query->max_num_pages,"", $paged);
+}
+$output = ob_get_contents();
+ob_end_clean();
+return $output;
+
+}
+add_shortcode( 'ni_myposts_pages_row', 'ni_posts_pages_row_func' );
+
+function custom_pagination($numpages = '', $pagerange = '', $paged='') {
+
+  if (empty($pagerange)) {
+    $pagerange = 2;
+  }
+  global $paged;
+  if (empty($paged)) {
+    $paged = 1;
+  }
+  if ($numpages == '') {
+    global $wp_query;
+    $numpages = $wp_query->max_num_pages;
+    if(!$numpages) {
+        $numpages = 1;
+    }
+  }
+
+  $pagination_args = array(
+    'base'            => get_pagenum_link(1) . '%_%',
+    'format'          => 'page/%#%',
+    'total'           => $numpages,
+    'current'         => $paged,
+    'show_all'        => False,
+    'end_size'        => 1,
+    'mid_size'        => $pagerange,
+    'prev_next'       => True,
+    'prev_text'       => __('<'),
+    'next_text'       => __('>'),
+    'type'            => 'array',
+    'add_args'        => false,
+    'add_fragment'    => ''
+  );
+
+ $paginate_links = paginate_links($pagination_args);
+
+ if (is_array($paginate_links)) {
+   echo "<div class='cpagination'>";
+   echo '<ul class="pagination">';
+   foreach ( $paginate_links as $page ) {
+     echo "<li class=\"page-item\">$page</li>";
+   }
+   echo '</ul>';
+   echo "</div>";
+ }
+}
+
